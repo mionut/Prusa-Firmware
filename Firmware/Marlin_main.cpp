@@ -3997,10 +3997,25 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
         }
         break;
 	
+	case 74:
+	{
+		float x = 0;
+		float y = 0;
+		if (code_seen('X')) x = code_value();
+		if (code_seen('Y')) y = code_value();
+		SERIAL_PROTOCOLPGM(" X: ");
+		MYSERIAL.print(x, 5);
+		SERIAL_PROTOCOLPGM(" Y: ");
+		MYSERIAL.print(y, 5);
+		SERIAL_PROTOCOLPGM(" Z: ");
+		MYSERIAL.print(mbl.get_z(x, y), 5);
+    SERIAL_PROTOCOLPGM("\n");
+	}
+	break;
 
 	case 75:
 	{
-		for (int i = 40; i <= 110; i++)
+		for (int i = 25; i <= 80; i++) 
 			printf_P(_N("%d  %.2f"), i, temp_comp_interpolation(i));
 	}
 	break;
@@ -4046,11 +4061,11 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 				gcode_G28(false, false, true);
 
 			}
-			if ((current_temperature_pinda > 35) && (farm_mode == false)) {
+			if ((current_temperature_pinda > 28) && (farm_mode == false)) {
 				//waiting for PIDNA probe to cool down in case that we are not in farm mode
 				current_position[Z_AXIS] = 100;
 				plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 3000 / 60, active_extruder);
-				if (lcd_wait_for_pinda(35) == false) { //waiting for PINDA probe to cool, if this takes more then time expected, temp. cal. fails
+				if (lcd_wait_for_pinda(28) == false) { //waiting for PINDA probe to cool, if this takes more then time expected, temp. cal. fails
 					lcd_temp_cal_show_result(false);
 					break;
 				}
@@ -4061,9 +4076,10 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 
 			float zero_z;
 			int z_shift = 0; //unit: steps
-			float start_temp = 5 * (int)(current_temperature_pinda / 5);
-			if (start_temp < 35) start_temp = 35;
-			if (start_temp < current_temperature_pinda) start_temp += 5;
+			float start_temp = 28;
+			while (start_temp < current_temperature_pinda) {
+				start_temp += 6;
+			}
 			printf_P(_N("start temperature: %.1f\n"), start_temp);
 
 //			setTargetHotend(200, 0);
@@ -4107,7 +4123,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 
 			int i = -1; for (; i < 5; i++)
 			{
-				float temp = (40 + i * 5);
+				float temp = (34 + i * 6);
 				printf_P(_N("\nStep: %d/6 (skipped)\nPINDA temperature: %d Z shift (mm):0\n"), i + 2, (40 + i*5));
 				if (i >= 0) EEPROM_save_B(EEPROM_PROBE_TEMP_SHIFT + i * 2, &z_shift);
 				if (start_temp <= temp) break;
@@ -4115,10 +4131,10 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 
 			for (i++; i < 5; i++)
 			{
-				float temp = (40 + i * 5);
+				float temp = (34 + i * 6);
 				printf_P(_N("\nStep: %d/6\n"), i + 2);
 				custom_message_state = i + 2;
-				setTargetBed(50 + 10 * (temp - 30) / 5);
+				setTargetBed(50 + 10 * (temp - 28) / 5);
 //				setTargetHotend(255, 0);
 				current_position[Z_AXIS] = MESH_HOME_Z_SEARCH;
 				plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 3000 / 60, active_extruder);
@@ -4195,8 +4211,8 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 		current_position[Z_AXIS] = 5;
 		plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 3000 / 60, active_extruder);
 
-		current_position[X_AXIS] = pgm_read_float(bed_ref_points);
-		current_position[Y_AXIS] = pgm_read_float(bed_ref_points + 1);
+		current_position[X_AXIS] = BED_X0;
+		current_position[Y_AXIS] = BED_Y0;
 		plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 3000 / 60, active_extruder);
 		st_synchronize();
 		
@@ -4226,8 +4242,8 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 			}
 			current_position[Z_AXIS] = 5;
 			plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 3000 / 60, active_extruder);
-			current_position[X_AXIS] = pgm_read_float(bed_ref_points);
-			current_position[Y_AXIS] = pgm_read_float(bed_ref_points + 1);
+			current_position[X_AXIS] = BED_X0;
+			current_position[Y_AXIS] = BED_Y0;
 			plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 3000 / 60, active_extruder);
 			st_synchronize();
 			find_bed_induction_sensor_point_z(-1.f);
@@ -4348,13 +4364,16 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 			break;
 		} 
 		
+		uint8_t nMeasPoints = MESH_MEAS_NUM_X_POINTS;
+		if (code_seen('N')) {
+			nMeasPoints = code_value_uint8();
+			if (nMeasPoints != 7) {
+				nMeasPoints = 3;
+			}
+		}
 		
-		bool temp_comp_start = true;
-#ifdef PINDA_THERMISTOR
-		temp_comp_start = false;
-#endif //PINDA_THERMISTOR
-
-		if (temp_comp_start)
+#ifndef PINDA_THERMISTOR
+		static bool run = false;
 		if (run == false && temp_cal_active == true && calibration_status_pinda() == true && target_temperature_bed >= 50) {
 			if (lcd_commands_type != LCD_COMMAND_STOP_PRINT) {
 				temp_compensation_start();
@@ -4368,6 +4387,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 			break;
 		}
 		run = false;
+#endif //PINDA_THERMISTOR
 		if (lcd_commands_type == LCD_COMMAND_STOP_PRINT) {
 			mesh_bed_leveling_flag = false;
 			break;
@@ -4376,7 +4396,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 		unsigned int custom_message_type_old = custom_message_type;
 		unsigned int custom_message_state_old = custom_message_state;
 		custom_message_type = CUSTOM_MSG_TYPE_MESHBL;
-		custom_message_state = (MESH_MEAS_NUM_X_POINTS * MESH_MEAS_NUM_Y_POINTS) + 10;
+		custom_message_state = (nMeasPoints * nMeasPoints) + 10;
 		lcd_update(1);
 
 		mbl.reset(); //reset mesh bed leveling
@@ -4390,8 +4410,8 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 		current_position[Z_AXIS] = MESH_HOME_Z_SEARCH;
 		plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[Z_AXIS] / 60, active_extruder);
 		// The move to the first calibration point.
-		current_position[X_AXIS] = pgm_read_float(bed_ref_points);
-		current_position[Y_AXIS] = pgm_read_float(bed_ref_points + 1);
+		current_position[X_AXIS] = BED_X0;
+		current_position[Y_AXIS] = BED_Y0;
 
 		#ifdef SUPPORT_VERBOSITY
 		if (verbosity_level >= 1)
@@ -4399,20 +4419,16 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 		    bool clamped = world2machine_clamp(current_position[X_AXIS], current_position[Y_AXIS]);
 			clamped ? SERIAL_PROTOCOLPGM("First calibration point clamped.\n") : SERIAL_PROTOCOLPGM("No clamping for first calibration point.\n");
 		}
-		#endif //SUPPORT_VERBOSITY
-		//            mbl.get_meas_xy(0, 0, current_position[X_AXIS], current_position[Y_AXIS], false);            
+		#endif //SUPPORT_VERBOSITY          
 		plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[X_AXIS] / 30, active_extruder);
 		// Wait until the move is finished.
 		st_synchronize();
 
-		int mesh_point = 0; //index number of calibration point
-
-		int ix = 0;
-		int iy = 0;
+		uint8_t mesh_point = 0; //index number of calibration point
 
 		int XY_AXIS_FEEDRATE = homing_feedrate[X_AXIS] / 20;
 		int Z_LIFT_FEEDRATE = homing_feedrate[Z_AXIS] / 40;
-		bool has_z = is_bed_z_jitter_data_valid(); //checks if we have data from Z calibration (offsets of the Z heiths of the 8 calibration points from the first point)
+		bool has_z = (nMeasPoints == 3) && is_bed_z_jitter_data_valid(); //checks if we have data from Z calibration (offsets of the Z heiths of the 8 calibration points from the first point)
 		#ifdef SUPPORT_VERBOSITY
 		if (verbosity_level >= 1) {
 			has_z ? SERIAL_PROTOCOLPGM("Z jitter data from Z cal. valid.\n") : SERIAL_PROTOCOLPGM("Z jitter data from Z cal. not valid.\n");
@@ -4420,17 +4436,17 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 		#endif // SUPPORT_VERBOSITY
 		setup_for_endstop_move(false); //save feedrate and feedmultiply, sets feedmultiply to 100
 		const char *kill_message = NULL;
-		while (mesh_point != MESH_MEAS_NUM_X_POINTS * MESH_MEAS_NUM_Y_POINTS) {
+		while (mesh_point != nMeasPoints * nMeasPoints) {
 			// Get coords of a measuring point.
-			ix = mesh_point % MESH_MEAS_NUM_X_POINTS; // from 0 to MESH_NUM_X_POINTS - 1
-			iy = mesh_point / MESH_MEAS_NUM_X_POINTS;
-			if (iy & 1) ix = (MESH_MEAS_NUM_X_POINTS - 1) - ix; // Zig zag
+			uint8_t ix = mesh_point % nMeasPoints; // from 0 to MESH_NUM_X_POINTS - 1
+			uint8_t iy = mesh_point / nMeasPoints;
+			if (iy & 1) ix = (nMeasPoints - 1) - ix; // Zig zag
 			float z0 = 0.f;
-			if (has_z && mesh_point > 0) {
+			if (has_z && (mesh_point > 0)) {
 				uint16_t z_offset_u = eeprom_read_word((uint16_t*)(EEPROM_BED_CALIBRATION_Z_JITTER + 2 * (ix + iy * 3 - 1)));
 				z0 = mbl.z_values[0][0] + *reinterpret_cast<int16_t*>(&z_offset_u) * 0.01;
 				//#if 0
-				#ifdef SUPPORT_VERBOSITY
+				//#ifdef SUPPORT_VERBOSITY
 				if (verbosity_level >= 1) {
 					SERIAL_ECHOLNPGM("");
 					SERIAL_ECHOPGM("Bed leveling, point: ");
@@ -4439,7 +4455,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 					MYSERIAL.print(z0, 5);
 					SERIAL_ECHOLNPGM("");
 				}
-				#endif // SUPPORT_VERBOSITY
+				//#endif // SUPPORT_VERBOSITY
 				//#endif
 			}
 
@@ -4449,8 +4465,8 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 			st_synchronize();
 
 			// Move to XY position of the sensor point.
-			current_position[X_AXIS] = pgm_read_float(bed_ref_points + 2 * mesh_point);
-			current_position[Y_AXIS] = pgm_read_float(bed_ref_points + 2 * mesh_point + 1);
+			current_position[X_AXIS] = BED_X(ix, nMeasPoints);
+			current_position[Y_AXIS] = BED_Y(iy, nMeasPoints);
 
 
 
@@ -4480,7 +4496,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 				kill_message = _i("Bed leveling failed. Sensor triggered too high. Waiting for reset.");////MSG_BED_LEVELING_FAILED_POINT_HIGH c=20 r=4
 				break;
 			}
-			#ifdef SUPPORT_VERBOSITY
+			//#ifdef SUPPORT_VERBOSITY
 			if (verbosity_level >= 10) {
 				SERIAL_ECHOPGM("X: ");
 				MYSERIAL.print(current_position[X_AXIS], 5);
@@ -4489,21 +4505,23 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 				MYSERIAL.print(current_position[Y_AXIS], 5);
 				SERIAL_PROTOCOLPGM("\n");
 			}
-			#endif // SUPPORT_VERBOSITY
+			//#endif // SUPPORT_VERBOSITY
 			float offset_z = 0;
 
 #ifdef PINDA_THERMISTOR
 			offset_z = temp_compensation_pinda_thermistor_offset(current_temperature_pinda);
 #endif //PINDA_THERMISTOR
 //			#ifdef SUPPORT_VERBOSITY
-/*			if (verbosity_level >= 1)
+			if (verbosity_level >= 1)
 			{
 				SERIAL_ECHOPGM("mesh bed leveling: ");
-				MYSERIAL.print(current_position[Z_AXIS], 5);
+				MYSERIAL.print(current_position[Z_AXIS] - offset_z, 5);
 				SERIAL_ECHOPGM(" offset: ");
-				MYSERIAL.print(offset_z, 5);
+				MYSERIAL.print(offset_z, 5);				
+				SERIAL_ECHOPGM(" pinda temp: ");
+				MYSERIAL.print(current_temperature_pinda, 5);
 				SERIAL_ECHOLNPGM("");
-			}*/
+			}
 //			#endif // SUPPORT_VERBOSITY
 			mbl.set_z(ix, iy, current_position[Z_AXIS] - offset_z); //store measured z values z_values[iy][ix] = z - offset_z;
 
@@ -4512,28 +4530,25 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 			lcd_update(1);
 		}
 		current_position[Z_AXIS] = MESH_HOME_Z_SEARCH;
-		#ifdef SUPPORT_VERBOSITY
+		//#ifdef SUPPORT_VERBOSITY
 		if (verbosity_level >= 20) {
 			SERIAL_ECHOLNPGM("Mesh bed leveling while loop finished.");
 			SERIAL_ECHOLNPGM("MESH_HOME_Z_SEARCH: ");
 			MYSERIAL.print(current_position[Z_AXIS], 5);
 		}
-		#endif // SUPPORT_VERBOSITY
+		//#endif // SUPPORT_VERBOSITY
 		plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], Z_LIFT_FEEDRATE, active_extruder);
 		st_synchronize();
-		if (mesh_point != MESH_MEAS_NUM_X_POINTS * MESH_MEAS_NUM_Y_POINTS) {
+		if (mesh_point != nMeasPoints * nMeasPoints) {
 			kill(kill_message);
 			SERIAL_ECHOLNPGM("killed");
 		}
 		clean_up_after_endstop_move();
 //		SERIAL_ECHOLNPGM("clean up finished ");
 
-		bool apply_temp_comp = true;
-#ifdef PINDA_THERMISTOR
-		apply_temp_comp = false;
+#ifndef PINDA_THERMISTOR
+		if (temp_cal_active == true && calibration_status_pinda() == true) temp_compensation_apply(); //apply PINDA temperature compensation
 #endif
-		if (apply_temp_comp)
-		if(temp_cal_active == true && calibration_status_pinda() == true) temp_compensation_apply(); //apply PINDA temperature compensation
 		babystep_apply(); // Apply Z height correction aka baby stepping before mesh bed leveing gets activated.
 //		SERIAL_ECHOLNPGM("babystep applied");
 		bool eeprom_bed_correction_valid = eeprom_read_byte((unsigned char*)EEPROM_BED_CORRECTION_VALID) == 1;
@@ -4566,44 +4581,52 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 			else {
 				switch (i) {
 				case 0:
-					for (uint8_t row = 0; row < 3; ++row) {
-						mbl.z_values[row][1] += 0.5f * offset;
-						mbl.z_values[row][0] += offset;
+					for (uint8_t row = 0; row < nMeasPoints; ++row) {						
+						for (uint8_t col = 0; col < nMeasPoints - 1; ++col) {
+							mbl.z_values[row][col] += offset * (nMeasPoints - 1 - col) / (nMeasPoints - 1);
+						}
 					}
 					break;
 				case 1:
-					for (uint8_t row = 0; row < 3; ++row) {
-						mbl.z_values[row][1] += 0.5f * offset;
-						mbl.z_values[row][2] += offset;
+					for (uint8_t row = 0; row < nMeasPoints; ++row) {					
+						for (uint8_t col = 1; col < nMeasPoints; ++col) {
+							mbl.z_values[row][col] += offset * col / (nMeasPoints - 1);
+						}
 					}
 					break;
 				case 2:
-					for (uint8_t col = 0; col < 3; ++col) {
-						mbl.z_values[1][col] += 0.5f * offset;
-						mbl.z_values[0][col] += offset;
+					for (uint8_t col = 0; col < nMeasPoints; ++col) {						
+						for (uint8_t row = 0; row < nMeasPoints; ++row) {
+							mbl.z_values[row][col] += offset * (nMeasPoints - 1 - row) / (nMeasPoints - 1);
+						}
 					}
 					break;
 				case 3:
-					for (uint8_t col = 0; col < 3; ++col) {
-						mbl.z_values[1][col] += 0.5f * offset;
-						mbl.z_values[2][col] += offset;
+					for (uint8_t col = 0; col < nMeasPoints; ++col) {						
+						for (uint8_t row = 1; row < nMeasPoints; ++row) {
+							mbl.z_values[row][col] += offset * row / (nMeasPoints - 1);
+						}
 					}
 					break;
 				}
 			}
 		}
 //		SERIAL_ECHOLNPGM("Bed leveling correction finished");
-		mbl.upsample_3x3(); //bilinear interpolation from 3x3 to 7x7 points while using the same array z_values[iy][ix] for storing (just coppying measured data to new destination and interpolating between them)
+		if (nMeasPoints == 3) {
+			mbl.upsample_3x3(); //bilinear interpolation from 3x3 to 7x7 points while using the same array z_values[iy][ix] for storing (just coppying measured data to new destination and interpolating between them)
+		}
 //		SERIAL_ECHOLNPGM("Upsample finished");
 		mbl.active = 1; //activate mesh bed leveling
 //		SERIAL_ECHOLNPGM("Mesh bed leveling activated");
 		go_home_with_z_lift();
 //		SERIAL_ECHOLNPGM("Go home finished");
+#ifndef PINDA_THERMISTOR
 		//unretract (after PINDA preheat retraction)
 		if (degHotend(active_extruder) > EXTRUDE_MINTEMP && temp_cal_active == true && calibration_status_pinda() == true && target_temperature_bed >= 50) {
 			current_position[E_AXIS] += default_retraction;
 			plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 400, active_extruder);
 		}
+#endif
 		KEEPALIVE_STATE(NOT_BUSY);
 		// Restore custom message state
 		lcd_setstatuspgm(_T(WELCOME_MSG));
@@ -6547,7 +6570,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 				float mm = ((float)usteps) / axis_steps_per_unit[Z_AXIS];
 				i == 0 ? SERIAL_PROTOCOLPGM("n/a") : SERIAL_PROTOCOL(i - 1);
 				SERIAL_PROTOCOLPGM(", ");
-				SERIAL_PROTOCOL(35 + (i * 5));
+				SERIAL_PROTOCOL(28 + (i * 6));
 				SERIAL_PROTOCOLPGM(", ");
 				SERIAL_PROTOCOL(usteps);
 				SERIAL_PROTOCOLPGM(", ");
@@ -6590,7 +6613,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 						float mm = ((float)usteps) / axis_steps_per_unit[Z_AXIS];
 						i == 0 ? SERIAL_PROTOCOLPGM("n/a") : SERIAL_PROTOCOL(i - 1);
 						SERIAL_PROTOCOLPGM(", ");
-						SERIAL_PROTOCOL(35 + (i * 5));
+						SERIAL_PROTOCOL(28 + (i * 6));
 						SERIAL_PROTOCOLPGM(", ");
 						SERIAL_PROTOCOL(usteps);
 						SERIAL_PROTOCOLPGM(", ");
@@ -8045,19 +8068,18 @@ float temp_comp_interpolation(float inp_temperature) {
 
 	//cubic spline interpolation
 
-	int n, i, j;
+	int8_t n, i, j;
 	float h[10], a, b, c, d, sum, s[10] = { 0 }, x[10], F[10], f[10], m[10][10] = { 0 }, temp;
 	int shift[10];
-	int temp_C[10];
+	int8_t temp_C[10];
 
 	n = 6; //number of measured points
 
 	shift[0] = 0;
 	for (i = 0; i < n; i++) {
 		if (i>0) EEPROM_read_B(EEPROM_PROBE_TEMP_SHIFT + (i-1) * 2, &shift[i]); //read shift in steps from EEPROM
-		temp_C[i] = 50 + i * 10; //temperature in C
 #ifdef PINDA_THERMISTOR
-		temp_C[i] = 35 + i * 5; //temperature in C
+		temp_C[i] = 28 + i * 6; //temperature in C
 #else
 		temp_C[i] = 50 + i * 10; //temperature in C
 #endif
