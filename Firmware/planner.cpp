@@ -1267,7 +1267,7 @@ void plan_set_position(float x, float y, float z, const float &e)
   position[Y_AXIS] = lround(y*axis_steps_per_unit[Y_AXIS]);
 #ifdef MESH_BED_LEVELING
   position[Z_AXIS] = mbl.active ? 
-    lround((z+mbl.get_z(x, y))*axis_steps_per_unit[Z_AXIS]) :
+    lround((z)*axis_steps_per_unit[Z_AXIS]) :
     lround(z*axis_steps_per_unit[Z_AXIS]);
 #else
   position[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);
