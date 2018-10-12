@@ -704,7 +704,7 @@ bool is_bed_z_jitter_data_valid()
 // offsets of the Z heiths of the calibration points from the first point are saved as 16bit signed int, scaled to tenths of microns
 {
     for (int8_t i = 0; i < 8; ++ i)
-        if (eeprom_read_word((uint16_t*)(EEPROM_BED_CALIBRATION_Z_JITTER+i*2)) == 0x0FFFF)
+        if (eeprom_read_word((uint16_t*)(EEPROM_BED_CALIBRATION_Z_JITTER+i*4)) == 0x0FFFF)
             return false;
     return true;
 }
