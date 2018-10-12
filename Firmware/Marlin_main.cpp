@@ -4442,7 +4442,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 				uint16_t z_offset_u = eeprom_read_word((uint16_t*)(EEPROM_BED_CALIBRATION_Z_JITTER + 2 * (ix + iy * 3 - 1)));
 				z0 = mbl.z_values[0][0] + *reinterpret_cast<int16_t*>(&z_offset_u) * 0.01;
 				//#if 0
-				#ifdef SUPPORT_VERBOSITY
+				//#ifdef SUPPORT_VERBOSITY
 				if (verbosity_level >= 1) {
 					SERIAL_ECHOLNPGM("");
 					SERIAL_ECHOPGM("Bed leveling, point: ");
@@ -4451,7 +4451,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 					MYSERIAL.print(z0, 5);
 					SERIAL_ECHOLNPGM("");
 				}
-				#endif // SUPPORT_VERBOSITY
+				//#endif // SUPPORT_VERBOSITY
 				//#endif
 			}
 
@@ -4492,7 +4492,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 				kill_message = _i("Bed leveling failed. Sensor triggered too high. Waiting for reset.");////MSG_BED_LEVELING_FAILED_POINT_HIGH c=20 r=4
 				break;
 			}
-			#ifdef SUPPORT_VERBOSITY
+			//#ifdef SUPPORT_VERBOSITY
 			if (verbosity_level >= 10) {
 				SERIAL_ECHOPGM("X: ");
 				MYSERIAL.print(current_position[X_AXIS], 5);
@@ -4501,21 +4501,23 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 				MYSERIAL.print(current_position[Y_AXIS], 5);
 				SERIAL_PROTOCOLPGM("\n");
 			}
-			#endif // SUPPORT_VERBOSITY
+			//#endif // SUPPORT_VERBOSITY
 			float offset_z = 0;
 
 #ifdef PINDA_THERMISTOR
 			offset_z = temp_compensation_pinda_thermistor_offset(current_temperature_pinda);
 #endif //PINDA_THERMISTOR
 //			#ifdef SUPPORT_VERBOSITY
-/*			if (verbosity_level >= 1)
+			if (verbosity_level >= 1)
 			{
 				SERIAL_ECHOPGM("mesh bed leveling: ");
-				MYSERIAL.print(current_position[Z_AXIS], 5);
+				MYSERIAL.print(current_position[Z_AXIS] - offset_z, 5);
 				SERIAL_ECHOPGM(" offset: ");
-				MYSERIAL.print(offset_z, 5);
+				MYSERIAL.print(offset_z, 5);				
+				SERIAL_ECHOPGM(" pinda temp: ");
+				MYSERIAL.print(current_temperature_pinda, 5);
 				SERIAL_ECHOLNPGM("");
-			}*/
+			}
 //			#endif // SUPPORT_VERBOSITY
 			mbl.set_z(ix, iy, current_position[Z_AXIS] - offset_z); //store measured z values z_values[iy][ix] = z - offset_z;
 
@@ -4524,13 +4526,13 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 			lcd_update(1);
 		}
 		current_position[Z_AXIS] = MESH_HOME_Z_SEARCH;
-		#ifdef SUPPORT_VERBOSITY
+		//#ifdef SUPPORT_VERBOSITY
 		if (verbosity_level >= 20) {
 			SERIAL_ECHOLNPGM("Mesh bed leveling while loop finished.");
 			SERIAL_ECHOLNPGM("MESH_HOME_Z_SEARCH: ");
 			MYSERIAL.print(current_position[Z_AXIS], 5);
 		}
-		#endif // SUPPORT_VERBOSITY
+		//#endif // SUPPORT_VERBOSITY
 		plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], Z_LIFT_FEEDRATE, active_extruder);
 		st_synchronize();
 		if (mesh_point != nMeasPoints * nMeasPoints) {
