@@ -2,9 +2,6 @@
 
 #ifdef MESH_BED_LEVELING
 
-#define MEAS_NUM_X_DIST (float(MESH_MAX_X - MESH_MIN_X)/float(MESH_MEAS_NUM_X_POINTS - 1))
-#define MEAS_NUM_Y_DIST (float(MESH_MAX_Y - MESH_MIN_Y)/float(MESH_MEAS_NUM_Y_POINTS - 1))
-
 #define MESH_X_DIST (float(MESH_MAX_X - MESH_MIN_X)/float(MESH_NUM_X_POINTS - 1))
 #define MESH_Y_DIST (float(MESH_MAX_Y - MESH_MIN_Y)/float(MESH_NUM_Y_POINTS - 1))
 
