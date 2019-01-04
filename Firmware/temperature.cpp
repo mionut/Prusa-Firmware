@@ -51,7 +51,8 @@ int current_temperature_raw[EXTRUDERS] = { 0 };
 float current_temperature[EXTRUDERS] = { 0.0 };
 
 #ifdef PINDA_THERMISTOR
-int current_temperature_raw_pinda =  0 ;
+uint16_t current_temperature_raw_pinda =  0 ;
+uint16_t current_temperature_raw_pinda_fast = 0;
 float current_temperature_pinda = 0.0;
 #endif //PINDA_THERMISTOR
 
@@ -956,7 +957,8 @@ static void updateTemperaturesFromRawValues()
     }
 
 #ifdef PINDA_THERMISTOR
-	current_temperature_pinda = (current_temperature_pinda * 5 + analog2tempBed(current_temperature_raw_pinda)) / 6;
+	current_temperature_raw_pinda = (uint16_t)((uint32_t)current_temperature_raw_pinda * 3 + current_temperature_raw_pinda_fast) >> 2;
+	current_temperature_pinda = analog2tempBed(current_temperature_raw_pinda);
 #endif
 
 #ifdef AMBIENT_THERMISTOR
@@ -1508,7 +1510,7 @@ extern "C" {
 void adc_ready(void) //callback from adc when sampling finished
 {
 	current_temperature_raw[0] = adc_values[ADC_PIN_IDX(TEMP_0_PIN)]; //heater
-	current_temperature_raw_pinda = adc_values[ADC_PIN_IDX(TEMP_PINDA_PIN)];
+	current_temperature_raw_pinda_fast = adc_values[ADC_PIN_IDX(TEMP_PINDA_PIN)];
 	current_temperature_bed_raw = adc_values[ADC_PIN_IDX(TEMP_BED_PIN)];
 #ifdef VOLT_PWR_PIN
 	current_voltage_raw_pwr = adc_values[ADC_PIN_IDX(VOLT_PWR_PIN)];
