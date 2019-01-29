@@ -4374,6 +4374,14 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 				nMeasPoints = 3;
 			}
 		}
+
+		uint8_t nProbeRetry = 3;
+		if (code_seen('R')) {
+			nProbeRetry = code_value_uint8();
+			if (nProbeRetry > 10) {
+				nProbeRetry = 3;
+			}
+		}
 		
 #ifndef PINDA_THERMISTOR
 		static bool run = false;
@@ -4487,7 +4495,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 
 			// Go down until endstop is hit
 			const float Z_CALIBRATION_THRESHOLD = 1.f;
-			if (!find_bed_induction_sensor_point_z((has_z && mesh_point > 0) ? z0 - Z_CALIBRATION_THRESHOLD : -10.f)) { //if we have data from z calibration max allowed difference is 1mm for each point, if we dont have data max difference is 10mm from initial point  
+			if (!find_bed_induction_sensor_point_z((has_z && mesh_point > 0) ? z0 - Z_CALIBRATION_THRESHOLD : -10.f, nProbeRetry)) { //if we have data from z calibration max allowed difference is 1mm for each point, if we dont have data max difference is 10mm from initial point  
 				kill_message = _T(MSG_BED_LEVELING_FAILED_POINT_LOW);
 				break;
 			}
