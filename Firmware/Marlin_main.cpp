@@ -8389,13 +8389,13 @@ void uvlo_()
     // Move Z up to the next 0th full step.
     // Write the file position.
     eeprom_update_dword((uint32_t*)(EEPROM_FILE_POSITION), sd_position);
-    // Store the mesh bed leveling offsets. This is 2*9=18 bytes, which takes 18*3.4us=52us in worst case.
-    for (int8_t mesh_point = 0; mesh_point < 9; ++ mesh_point) {
-      uint8_t ix = mesh_point % MESH_MEAS_NUM_X_POINTS; // from 0 to MESH_NUM_X_POINTS - 1
-      uint8_t iy = mesh_point / MESH_MEAS_NUM_X_POINTS;
+    // Store the mesh bed leveling offsets. This is 2*7*7=98 bytes, which takes 288*3.4us=333us in worst case.
+    for (int8_t mesh_point = 0; mesh_point < MESH_NUM_X_POINTS * MESH_NUM_Y_POINTS; ++ mesh_point) {
+      uint8_t ix = mesh_point % MESH_NUM_X_POINTS; // from 0 to MESH_NUM_X_POINTS - 1
+      uint8_t iy = mesh_point / MESH_NUM_X_POINTS;
       // Scale the z value to 1u resolution.
-      int16_t v = mbl.active ? int16_t(floor(mbl.z_values[iy*3][ix*3] * 1000.f + 0.5f)) : 0;
-      eeprom_update_word((uint16_t*)(EEPROM_UVLO_MESH_BED_LEVELING+2*mesh_point), *reinterpret_cast<uint16_t*>(&v));
+      int16_t v = mbl.active ? int16_t(floor(mbl.z_values[iy][ix] * 1000.f + 0.5f)) : 0;
+      eeprom_update_word((uint16_t*)(EEPROM_UVLO_MESH_BED_LEVELING_FULL +2*mesh_point), *reinterpret_cast<uint16_t*>(&v));
     }
     // Read out the current Z motor microstep counter. This will be later used
     // for reaching the zero full step before powering off.
@@ -8616,18 +8616,16 @@ void recover_machine_state_after_power_panic(bool bTiny)
 
   // 3) Restore the mesh bed leveling offsets. This is 2*9=18 bytes, which takes 18*3.4us=52us in worst case.
   mbl.active = false;
-  for (int8_t mesh_point = 0; mesh_point < 9; ++ mesh_point) {
-    uint8_t ix = mesh_point % MESH_MEAS_NUM_X_POINTS; // from 0 to MESH_NUM_X_POINTS - 1
-    uint8_t iy = mesh_point / MESH_MEAS_NUM_X_POINTS;
+  for (int8_t mesh_point = 0; mesh_point < MESH_NUM_X_POINTS * MESH_NUM_Y_POINTS; ++ mesh_point) {
+    uint8_t ix = mesh_point % MESH_NUM_X_POINTS; // from 0 to MESH_NUM_X_POINTS - 1
+    uint8_t iy = mesh_point / MESH_NUM_X_POINTS;
     // Scale the z value to 10u resolution.
     int16_t v;
-    eeprom_read_block(&v, (void*)(EEPROM_UVLO_MESH_BED_LEVELING+2*mesh_point), 2);
+    eeprom_read_block(&v, (void*)(EEPROM_UVLO_MESH_BED_LEVELING_FULL+2*mesh_point), 2);
     if (v != 0)
       mbl.active = true;
     mbl.z_values[iy][ix] = float(v) * 0.001f;
   }
-  if (mbl.active)
-    mbl.upsample_3x3();
 //  SERIAL_ECHOPGM("recover_machine_state_after_power_panic, initial ");
 //  print_mesh_bed_leveling_table();
 
