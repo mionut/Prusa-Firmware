@@ -143,7 +143,10 @@ static volatile bool temp_meas_ready = false;
 #if (defined(EXTRUDER_0_AUTO_FAN_PIN) && EXTRUDER_0_AUTO_FAN_PIN > -1) || \
     (defined(EXTRUDER_1_AUTO_FAN_PIN) && EXTRUDER_1_AUTO_FAN_PIN > -1) || \
     (defined(EXTRUDER_2_AUTO_FAN_PIN) && EXTRUDER_2_AUTO_FAN_PIN > -1)
-  static unsigned long extruder_autofan_last_check;
+  unsigned long extruder_autofan_last_check = _millis();
+  uint8_t fanSpeedBckp = 255;
+  bool fan_measuring = false;
+
 #endif  
 
 
@@ -463,7 +466,7 @@ void setExtruderAutoFanState(int pin, bool state)
   // this idiom allows both digital and PWM fan outputs (see M42 handling).
   pinMode(pin, OUTPUT);
   digitalWrite(pin, newFanSpeed);
-  analogWrite(pin, newFanSpeed);
+  //analogWrite(pin, newFanSpeed);
 }
 
 #if (defined(FANCHECK) && (((defined(TACH_0) && (TACH_0 >-1)) || (defined(TACH_1) && (TACH_1 > -1)))))
@@ -485,6 +488,16 @@ extern bool fans_check_enabled;
 
 void checkFanSpeed()
 {
+	uint8_t max_print_fan_errors = 0;
+	uint8_t max_extruder_fan_errors = 0;
+#ifdef FAN_SOFT_PWM
+	max_print_fan_errors = 3; //15 seconds
+	max_extruder_fan_errors = 2; //10seconds
+#else //FAN_SOFT_PWM
+	max_print_fan_errors = 15; //15 seconds
+	max_extruder_fan_errors = 5; //5 seconds
+#endif //FAN_SOFT_PWM
+
 	fans_check_enabled = (eeprom_read_byte((uint8_t*)EEPROM_FAN_CHECK_ENABLED) > 0);
 	static unsigned char fan_speed_errors[2] = { 0,0 };
 #if (defined(FANCHECK) && defined(TACH_0) && (TACH_0 >-1))
@@ -492,15 +505,15 @@ void checkFanSpeed()
 	else fan_speed_errors[0] = 0;
 #endif
 #if (defined(FANCHECK) && defined(TACH_1) && (TACH_1 >-1))
-	if ((fan_speed[1] == 0) && ((blocks_queued() ? block_buffer[block_buffer_tail].fan_speed : fanSpeed) > MIN_PRINT_FAN_SPEED)) fan_speed_errors[1]++;
+	if ((fan_speed[1] < 5) && ((blocks_queued() ? block_buffer[block_buffer_tail].fan_speed : fanSpeed) > MIN_PRINT_FAN_SPEED)) fan_speed_errors[1]++;
 	else fan_speed_errors[1] = 0;
 #endif
 
-	if ((fan_speed_errors[0] > 5) && fans_check_enabled) {
+	if ((fan_speed_errors[0] > max_extruder_fan_errors) && fans_check_enabled) {
 		fan_speed_errors[0] = 0;
 		fanSpeedError(0); //extruder fan
 	}
-	if ((fan_speed_errors[1] > 15) && fans_check_enabled) {
+	if ((fan_speed_errors[1] > max_print_fan_errors) && fans_check_enabled) {
 		fan_speed_errors[1] = 0;
 		fanSpeedError(1); //print fan
 	}
@@ -735,10 +748,38 @@ void manage_heater()
     #endif
   } // End extruder for loop
 
+#define FAN_CHECK_PERIOD 5000 //5s
+#define FAN_CHECK_DURATION 100 //100ms
+
 #ifndef DEBUG_DISABLE_FANCHECK
   #if (defined(EXTRUDER_0_AUTO_FAN_PIN) && EXTRUDER_0_AUTO_FAN_PIN > -1) || \
       (defined(EXTRUDER_1_AUTO_FAN_PIN) && EXTRUDER_1_AUTO_FAN_PIN > -1) || \
       (defined(EXTRUDER_2_AUTO_FAN_PIN) && EXTRUDER_2_AUTO_FAN_PIN > -1)
+
+#ifdef FAN_SOFT_PWM
+#ifdef FANCHECK
+  if ((_millis() - extruder_autofan_last_check > FAN_CHECK_PERIOD) && (!fan_measuring)) {
+	  extruder_autofan_last_check = _millis();
+	  fanSpeedBckp = fanSpeedSoftPwm;
+	  
+	  if (fanSpeedSoftPwm >= MIN_PRINT_FAN_SPEED) { //if we are in rage where we are doing fan check, set full PWM range for a short time to measure fan RPM by reading tacho signal without modulation by PWM signal
+		//  printf_P(PSTR("fanSpeedSoftPwm 1: %d\n"), fanSpeedSoftPwm);
+		  fanSpeedSoftPwm = 255;
+	  }
+	  fan_measuring = true;
+  }
+  if ((_millis() - extruder_autofan_last_check > FAN_CHECK_DURATION) && (fan_measuring)) {
+	  countFanSpeed();
+	  checkFanSpeed();
+	  //printf_P(PSTR("fanSpeedSoftPwm 1: %d\n"), fanSpeedSoftPwm);
+	  fanSpeedSoftPwm = fanSpeedBckp;
+	  //printf_P(PSTR("fan PWM: %d; extr fanSpeed measured: %d; print fan speed measured: %d \n"), fanSpeedBckp, fan_speed[0], fan_speed[1]);
+	  extruder_autofan_last_check = _millis();
+	  fan_measuring = false;
+  }
+#endif //FANCHECK
+  checkExtruderAutoFans();
+#else //FAN_SOFT_PWM
   if(_millis() - extruder_autofan_last_check > 1000)  // only need to check fan state very infrequently
   {
 #if (defined(FANCHECK) && ((defined(TACH_0) && (TACH_0 >-1)) || (defined(TACH_1) && (TACH_1 > -1))))
@@ -748,7 +789,9 @@ void manage_heater()
     checkExtruderAutoFans();
     extruder_autofan_last_check = _millis();
   }  
-  #endif       
+#endif //FAN_SOFT_PWM
+
+  #endif  
 #endif //DEBUG_DISABLE_FANCHECK
   
   #ifndef PIDTEMPBED
@@ -1057,7 +1100,7 @@ void tp_init()
     setPwmFrequency(FAN_PIN, 1); // No prescaling. Pwm frequency = F_CPU/256/8
     #endif
     #ifdef FAN_SOFT_PWM
-    soft_pwm_fan = fanSpeedSoftPwm / 2;
+    soft_pwm_fan = fanSpeedSoftPwm / (1 << (8 - FAN_SOFT_PWM_BITS));
     #endif
   #endif
 
@@ -1357,7 +1400,12 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE)||(eSoundMode
 		SET_OUTPUT(EXTRUDER_0_AUTO_FAN_PIN);
 		SET_OUTPUT(FAN_PIN);
 		WRITE(EXTRUDER_0_AUTO_FAN_PIN, 1);
+#ifdef FAN_SOFT_PWM
+		fanSpeedSoftPwm = 255;
+#else //FAN_SOFT_PWM
 		analogWrite(FAN_PIN, 255);
+#endif //FAN_SOFT_PWM
+
 		fanSpeed = 255;
 		delayMicroseconds(2000);
 	}
@@ -1643,11 +1691,14 @@ ISR(TIMER0_COMPB_vect)
 	if(soft_pwm_b > 0) WRITE(HEATER_BED_PIN,1); else WRITE(HEATER_BED_PIN,0);
 #endif //SYSTEM_TIMER_2
 #endif
-#ifdef FAN_SOFT_PWM
-    soft_pwm_fan = fanSpeedSoftPwm / 2;
-    if(soft_pwm_fan > 0) WRITE(FAN_PIN,1); else WRITE(FAN_PIN,0);
-#endif
   }
+#ifdef FAN_SOFT_PWM
+  if ((pwm_count & ((1 << FAN_SOFT_PWM_BITS) - 1)) == 0)
+  {
+    soft_pwm_fan = fanSpeedSoftPwm / (1 << (8 - FAN_SOFT_PWM_BITS));
+    if(soft_pwm_fan > 0) WRITE(FAN_PIN,1); else WRITE(FAN_PIN,0);
+  }
+#endif
   if(soft_pwm_0 < pwm_count)
   { 
     WRITE(HEATER_0_PIN,0);
@@ -1666,7 +1717,7 @@ ISR(TIMER0_COMPB_vect)
   if(soft_pwm_b < pwm_count) WRITE(HEATER_BED_PIN,0);
 #endif
 #ifdef FAN_SOFT_PWM
-  if(soft_pwm_fan < pwm_count) WRITE(FAN_PIN,0);
+  if (soft_pwm_fan < (pwm_count & ((1 << FAN_SOFT_PWM_BITS) - 1))) WRITE(FAN_PIN,0);
 #endif
   
   pwm_count += (1 << SOFT_PWM_SCALE);
@@ -1853,8 +1904,8 @@ ISR(TIMER0_COMPB_vect)
 #endif
   
 #ifdef FAN_SOFT_PWM
-  if (pwm_count == 0){
-    soft_pwm_fan = fanSpeedSoftPwm / 2;
+  if ((pwm_count & ((1 << FAN_SOFT_PWM_BITS) - 1)) == 0)
+    soft_pwm_fan = fanSpeedSoftPwm / (1 << (8 - FAN_SOFT_PWM_BITS));
     if (soft_pwm_fan > 0) WRITE(FAN_PIN,1); else WRITE(FAN_PIN,0);
   }
   if (soft_pwm_fan < pwm_count) WRITE(FAN_PIN,0);
@@ -1984,7 +2035,7 @@ if(current_temperature_raw_ambient>(OVERSAMPLENR*MINTEMP_MINAMBIENT_RAW)) // the
 // * nozzle checking
 if(target_temperature[active_extruder]>minttemp[active_extruder])
      {                                            // ~ nozzle heating is on
-     bCheckingOnHeater=bCheckingOnHeater||(current_temperature[active_extruder]>=minttemp[active_extruder]); // for eventually delay cutting
+     bCheckingOnHeater=bCheckingOnHeater||(current_temperature[active_extruder]>(minttemp[active_extruder]+TEMP_HYSTERESIS)); // for eventually delay cutting
      if(oTimer4minTempHeater.expired(HEATER_MINTEMP_DELAY)||(!oTimer4minTempHeater.running())||bCheckingOnHeater)
           {
           bCheckingOnHeater=true;                 // not necessary
@@ -1998,7 +2049,7 @@ else {                                            // ~ nozzle heating is off
 // * bed checking
 if(target_temperature_bed>BED_MINTEMP)
      {                                            // ~ bed heating is on
-     bCheckingOnBed=bCheckingOnBed||(current_temperature_bed>=BED_MINTEMP); // for eventually delay cutting
+     bCheckingOnBed=bCheckingOnBed||(current_temperature_bed>(BED_MINTEMP+TEMP_HYSTERESIS)); // for eventually delay cutting
      if(oTimer4minTempBed.expired(BED_MINTEMP_DELAY)||(!oTimer4minTempBed.running())||bCheckingOnBed)
           {
           bCheckingOnBed=true;                    // not necessary
@@ -2021,10 +2072,17 @@ else {                                            // ambient temperature is stan
  
 #if (defined(FANCHECK) && defined(TACH_0) && (TACH_0 > -1))
 void check_fans() {
+#ifdef FAN_SOFT_PWM
+	if (READ(TACH_0) != fan_state[0]) {
+		if(fan_measuring) fan_edge_counter[0] ++;
+		fan_state[0] = !fan_state[0];
+	}
+#else //FAN_SOFT_PWM
 	if (READ(TACH_0) != fan_state[0]) {
 		fan_edge_counter[0] ++;
 		fan_state[0] = !fan_state[0];
 	}
+#endif
 	//if (READ(TACH_1) != fan_state[1]) {
 	//	fan_edge_counter[1] ++;
 	//	fan_state[1] = !fan_state[1];
