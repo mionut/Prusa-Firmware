@@ -22,7 +22,7 @@ uint8_t tmc2130_current_h[4] = TMC2130_CURRENTS_H;
 uint8_t tmc2130_current_r[4] = TMC2130_CURRENTS_R;
 
 //running currents for homing
-uint8_t tmc2130_current_r_home[4] = {8, 10, 20, 18};
+uint8_t tmc2130_current_r_home[4] = {10, 10, 20, 18};
 
 
 //pwm_ampl
@@ -38,7 +38,7 @@ uint8_t tmc2130_mres[4] = {0, 0, 0, 0}; //will be filed at begin of init
 
 
 uint8_t tmc2130_sg_thr[4] = {TMC2130_SG_THRS_X, TMC2130_SG_THRS_Y, TMC2130_SG_THRS_Z, TMC2130_SG_THRS_E};
-uint8_t tmc2130_sg_thr_home[4] = {3, 3, TMC2130_SG_THRS_Z, TMC2130_SG_THRS_E};
+uint8_t tmc2130_sg_thr_home[4] = {1, 1, TMC2130_SG_THRS_Z, TMC2130_SG_THRS_E};
 
 
 uint8_t tmc2130_sg_homing_axes_mask = 0x00;
@@ -54,12 +54,13 @@ uint8_t tmc2130_home_fsteps[2] = {48, 48};
 
 uint8_t tmc2130_wave_fac[4] = {0, 0, 0, 0};
 
+//Kuo chopper config
 tmc2130_chopper_config_t tmc2130_chopper_config[4] = {
-	{TMC2130_TOFF_XYZ, 5, 1, 2, 0},
-	{TMC2130_TOFF_XYZ, 5, 1, 2, 0},
-	{TMC2130_TOFF_XYZ, 5, 1, 2, 0},
-	{TMC2130_TOFF_E, 5, 1, 2, 0}
-};
+      {TMC2130_TOFF_X, 2, 0, 2, 0},
+      {TMC2130_TOFF_Y, 2, 0, 2, 0},
+      {TMC2130_TOFF_Z, 5, 1, 2, 0},
+      {TMC2130_TOFF_E, 5, 1, 2, 0}
+     };
 
 bool tmc2130_sg_stop_on_crash = true;
 uint8_t tmc2130_sg_diag_mask = 0x00;
@@ -786,10 +787,11 @@ void tmc2130_do_steps(uint8_t axis, uint16_t steps, uint8_t dir, uint16_t delay_
 
 void tmc2130_goto_step(uint8_t axis, uint8_t step, uint8_t dir, uint16_t delay_us, uint16_t microstep_resolution)
 {
-	printf_P(PSTR("tmc2130_goto_step %d %d %d %d \n"), axis, step, dir, delay_us, microstep_resolution);
-	uint8_t shift; for (shift = 0; shift < 8; shift++) if (microstep_resolution == (256u >> shift)) break;
-	uint16_t cnt = 4 * (1 << (8 - shift));
-	uint16_t mscnt = tmc2130_rd_MSCNT(axis);
+	printf_P(PSTR("tmc2130_goto_step %d %d %d %d %d\n"), axis, step, dir, delay_us, microstep_resolution);
+	uint8_t shift; for (shift = 0; shift < 8; shift++) if (microstep_resolution == (256u >> shift)) break;	
+	int cnt = 4 * (1 << (8 - shift));
+	uint16_t  mscnt = tmc2130_rd_MSCNT(axis);
+	printf_P(PSTR("shift %d cnt %d mscnt %d\n"), shift, cnt, mscnt);
 	if (dir == 2)
 	{
 		dir = tmc2130_get_inv(axis)?0:1;

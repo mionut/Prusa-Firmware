@@ -165,7 +165,7 @@ static bool lcd_selfcheck_pulleys(int axis);
 #endif //TMC2130
 
 static bool lcd_selfcheck_check_heater(bool _isbed);
-enum class testScreen
+enum class testScreen : uint_least8_t
 {
     extruderFan,
     printFan,

@@ -2204,7 +2204,7 @@ void homeaxis(int axis, uint8_t cnt)
 #ifdef TMC2130
 		uint8_t orig = tmc2130_home_origin[axis];
 		uint8_t back = tmc2130_home_bsteps[axis];
-		if (tmc2130_home_enabled && (orig <= 63))
+		if (tmc2130_home_enabled && (orig <= 31)) //63 for 1.8 stepper mottor
 		{
 			tmc2130_goto_step(axis, orig, 2, 1000, tmc2130_get_res(axis));
 			if (back > 0)
@@ -4448,7 +4448,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 
 		uint8_t mesh_point = 0; //index number of calibration point
 
-		int XY_AXIS_FEEDRATE = homing_feedrate[X_AXIS] / 20;
+		float XY_AXIS_FEEDRATE = homing_feedrate[X_AXIS] / 13;
 		int Z_LIFT_FEEDRATE = homing_feedrate[Z_AXIS] / 40;
 		bool has_z = is_bed_z_jitter_data_valid(); //checks if we have data from Z calibration (offsets of the Z heiths of the 8 calibration points from the first point)
 		#ifdef SUPPORT_VERBOSITY
@@ -6875,6 +6875,159 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
     }
     break;
 
+		    
+case 919: //! M919 - Set TMC2130 toff Kuo
+     {
+     uint8_t a = 0;
+     uint8_t theValue;
+    
+     if (code_seen('X')) 
+     {
+      a = 0;
+      theValue = code_value();
+     }
+      if (code_seen('Y')) 
+     {
+      a = 1;
+      theValue = code_value();
+     }
+      if (code_seen('Z')) 
+     {
+      a = 2;
+      theValue = code_value();
+     }
+      if (code_seen('E')) 
+     {
+      a = 3;
+      theValue = code_value();
+     }
+     
+     tmc2130_chopper_config[a].toff = theValue;
+     printf_P(_N("tmc2130_toff[%c]=%d\n"), "XYZE"[a], tmc2130_chopper_config[a].toff);  
+
+     tmc2130_setup_chopper(a, tmc2130_mres[a], tmc2130_current_h[a], tmc2130_current_r[a]);
+ 
+    }
+    break;
+
+ case 920: //! M920 - Set TMC2130 hstr Kuo
+ {
+     uint8_t a = 0;
+     uint8_t theValue;
+    
+     if (code_seen('X')) 
+     {
+      a = 0;
+      theValue = code_value();
+     }
+      if (code_seen('Y')) 
+     {
+      a = 1;
+      theValue = code_value();
+     }
+      if (code_seen('Z')) 
+     {
+      a = 2;
+      theValue = code_value();
+     }
+      if (code_seen('E')) 
+     {
+      a = 3;
+      theValue = code_value();
+     }
+
+     tmc2130_chopper_config[a].hstr = theValue;
+     printf_P(_N("tmc2130_hstr[%c]=%d\n"), "XYZE"[a], tmc2130_chopper_config[a].hstr);  
+ 
+     tmc2130_setup_chopper(a, tmc2130_mres[a], tmc2130_current_h[a], tmc2130_current_r[a]);
+ 
+    }
+    break;
+
+ case 921: //! M921 - Set TMC2130 hend Kuo
+    {
+     uint8_t a = 0;
+     uint8_t theValue;
+    
+     if (code_seen('X')) 
+     {
+      a = 0;
+      theValue = code_value();
+     }
+      if (code_seen('Y')) 
+     {
+      a = 1;
+      theValue = code_value();
+     }
+      if (code_seen('Z')) 
+     {
+      a = 2;
+      theValue = code_value();
+     }
+      if (code_seen('E')) 
+     {
+      a = 3;
+      theValue = code_value();
+     }
+
+     tmc2130_chopper_config[a].hend = theValue;
+     printf_P(_N("tmc2130_hend[%c]=%d\n"), "XYZE"[a], tmc2130_chopper_config[a].hend);  
+
+     tmc2130_setup_chopper(a, tmc2130_mres[a], tmc2130_current_h[a], tmc2130_current_r[a]);
+    }
+    break;
+    
+ case 922: //! M922 - Set TMC2130 tbl Kuo
+    {
+     uint8_t a = 0;
+     uint8_t theValue;
+    
+     if (code_seen('X')) 
+     {
+      a = 0;
+      theValue = code_value();
+     }
+      if (code_seen('Y')) 
+     {
+      a = 1;
+      theValue = code_value();
+     }
+      if (code_seen('Z')) 
+     {
+      a = 2;
+      theValue = code_value();
+     }
+      if (code_seen('E')) 
+     {
+      a = 3;
+      theValue = code_value();
+     }
+
+     tmc2130_chopper_config[a].tbl = theValue;
+     printf_P(_N("tmc2130_tbl[%c]=%d\n"), "XYZE"[a], tmc2130_chopper_config[a].tbl);  
+    
+     tmc2130_setup_chopper(a, tmc2130_mres[a], tmc2130_current_h[a], tmc2130_current_r[a]);
+ 
+    }
+    break;
+
+
+  case 924: //! M924 - Set sg_thrs_home Kuo
+    {
+    if (code_seen('X')) tmc2130_sg_thr_home[X_AXIS] = code_value();
+    if (code_seen('Y')) tmc2130_sg_thr_home[Y_AXIS] = code_value();
+    if (code_seen('Z')) tmc2130_sg_thr_home[Z_AXIS] = code_value();
+    if (code_seen('E')) tmc2130_sg_thr_home[E_AXIS] = code_value();
+    for (uint8_t a = X_AXIS; a <= E_AXIS; a++)
+      printf_P(_N("tmc2130_sg_thr_home[%c]=%d\n"), "XYZE"[a], tmc2130_sg_thr_home[a]);
+    }
+    break;
+
+
+		    
+		    
+		    
+		    
 #endif //TMC2130_SERVICE_CODES_M910_M918
 
     case 350: //! M350 - Set microstepping mode. Warning: Steps per unit remains unchanged. S code sets stepping mode for all drivers.

@@ -3144,7 +3144,7 @@ bool mbl_point_measurement_valid(uint8_t ix, uint8_t iy, uint8_t meas_points, bo
 		uint8_t valid_points_mask[7] = {
 					//[X_MAX,Y_MAX]
 			//0123456
-			0b1111111,//6
+			0b1011111,//6
 			0b1111111,//5
 			0b1110111,//4
 			0b1111011,//3
