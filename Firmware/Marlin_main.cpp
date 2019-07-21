@@ -4556,7 +4556,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
 
 		uint8_t mesh_point = 0; //index number of calibration point
 
-		float XY_AXIS_FEEDRATE = homing_feedrate[X_AXIS] / 13;
+		float XY_AXIS_FEEDRATE = homing_feedrate[X_AXIS] / 20;
 		int Z_LIFT_FEEDRATE = homing_feedrate[Z_AXIS] / 40;
 		bool has_z = is_bed_z_jitter_data_valid(); //checks if we have data from Z calibration (offsets of the Z heiths of the 8 calibration points from the first point)
 		#ifdef SUPPORT_VERBOSITY
@@ -6977,7 +6977,7 @@ if((eSoundMode==e_SOUND_MODE_LOUD)||(eSoundMode==e_SOUND_MODE_ONCE))
     break;
 
 		    
-case 919: //! M919 - Set TMC2130 toff Kuo
+/*case 919: //! M919 - Set TMC2130 toff Kuo
      {
      uint8_t a = 0;
      uint8_t theValue;
@@ -7123,7 +7123,7 @@ case 919: //! M919 - Set TMC2130 toff Kuo
       printf_P(_N("tmc2130_sg_thr_home[%c]=%d\n"), "XYZE"[a], tmc2130_sg_thr_home[a]);
     }
     break;
-
+*/
 
 		    
 		    

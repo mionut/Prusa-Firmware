@@ -794,7 +794,7 @@ void tmc2130_goto_step(uint8_t axis, uint8_t step, uint8_t dir, uint16_t delay_u
 	uint8_t shift; for (shift = 0; shift < 8; shift++) if (microstep_resolution == (256u >> shift)) break;	
 	int cnt = 4 * (1 << (8 - shift));
 	uint16_t  mscnt = tmc2130_rd_MSCNT(axis);
-	printf_P(PSTR("shift %d cnt %d mscnt %d\n"), shift, cnt, mscnt);
+	//printf_P(PSTR("shift %d cnt %d mscnt %d\n"), shift, cnt, mscnt);
 	if (dir == 2)
 	{
 		dir = tmc2130_get_inv(axis)?0:1;
