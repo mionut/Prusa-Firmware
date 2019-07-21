@@ -166,6 +166,7 @@
 #define EEPROM_CHECK_MODE (EEPROM_MMU_STEALTH-1) // uint8
 #define EEPROM_NOZZLE_DIAMETER (EEPROM_CHECK_MODE-1) // uint8
 #define EEPROM_NOZZLE_DIAMETER_uM (EEPROM_NOZZLE_DIAMETER-2) // uint16
+#define EEPROM_UVLO_LA_K (EEPROM_NOZZLE_DIAMETER_uM-4) // float
 
 //This is supposed to point to last item to allow EEPROM overrun check. Please update when adding new items.
 #define EEPROM_LAST_ITEM EEPROM_NOZZLE_DIAMETER_uM
