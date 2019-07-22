@@ -2,12 +2,16 @@
 #define CONFIGURATION_PRUSA_H
 
 #include <limits.h>
+#include "printers.h"
 /*------------------------------------
  GENERAL SETTINGS
  *------------------------------------*/
 
 // Printer revision
 #define PRINTER_TYPE PRINTER_MK3S
+#define PRINTER_NAME PRINTER_MK3S_NAME
+#define PRINTER_MMU_TYPE PRINTER_MK3S_MMU2
+#define PRINTER_MMU_NAME PRINTER_MK3S_MMU2_NAME
 #define FILAMENT_SIZE "1_75mm_MK3"
 #define NOZZLE_TYPE "E3Dv6full"
 
@@ -24,6 +28,7 @@
 
 // PSU
 //#define PSU_Delta                                 // uncomment if DeltaElectronics PSU installed
+
 
 // Uncomment the below for the E3D PT100 temperature sensor (with or without PT100 Amplifier)
 //#define E3D_PT100_EXTRUDER_WITH_AMP
