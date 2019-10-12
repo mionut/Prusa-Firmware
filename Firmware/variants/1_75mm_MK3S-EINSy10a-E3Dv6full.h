@@ -130,7 +130,7 @@
 #define WATCHDOG
 
 // Power panic
-#define UVLO_SUPPORT
+//#define UVLO_SUPPORT
 
 // Fan check
 #define FANCHECK
@@ -235,6 +235,7 @@
 #define TMC2130_PWM_AUTO_E  1         // PWMCONF
 #define TMC2130_PWM_FREQ_E  2         // PWMCONF
 
+//#define TMC2130_TOFF_XYZ    3         // CHOPCONF // fchop = 27.778kHz
 #define TMC2130_TOFF_X 		2 
 #define TMC2130_TOFF_Y 		2 
 #define TMC2130_TOFF_Z 		3 

@@ -2205,9 +2205,10 @@ void homeaxis(int axis, uint8_t cnt)
 #ifdef TMC2130
 		uint8_t orig = tmc2130_home_origin[axis];
 		uint8_t back = tmc2130_home_bsteps[axis];
-		if (tmc2130_home_enabled && (orig <= 31)) //63 for 1.8 stepper mottor
+		uint16_t res = tmc2130_get_res(axis);
+		if (tmc2130_home_enabled && (orig < 4 * res))
 		{
-			tmc2130_goto_step(axis, orig, 2, 1000, tmc2130_get_res(axis));
+			tmc2130_goto_step(axis, orig, 2, 1000, res);
 			if (back > 0)
 				tmc2130_do_steps(axis, back, -axis_home_dir, 1000);
 		}
@@ -4719,7 +4720,7 @@ if(eSoundMode!=e_SOUND_MODE_SILENT)
 
 		uint8_t mesh_point = 0; //index number of calibration point
 
-		float XY_AXIS_FEEDRATE = homing_feedrate[X_AXIS] / 20;
+		int XY_AXIS_FEEDRATE = homing_feedrate[X_AXIS] / 13;
 		int Z_LIFT_FEEDRATE = homing_feedrate[Z_AXIS] / 40;
 		bool has_z = is_bed_z_jitter_data_valid(); //checks if we have data from Z calibration (offsets of the Z heiths of the 8 calibration points from the first point)
 		#ifdef SUPPORT_VERBOSITY

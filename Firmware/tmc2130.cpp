@@ -58,11 +58,11 @@ uint8_t tmc2130_wave_fac[4] = {0, 0, 0, 0};
 
 //Kuo chopper config
 tmc2130_chopper_config_t tmc2130_chopper_config[4] = {
-      {TMC2130_TOFF_X, 2, 0, 2, 0},
-      {TMC2130_TOFF_Y, 2, 0, 2, 0},
-      {TMC2130_TOFF_Z, 5, 1, 2, 0},
-      {TMC2130_TOFF_E, 5, 1, 2, 0}
-     };
+	{TMC2130_TOFF_X, 5, 1, 2, 0},
+	{TMC2130_TOFF_Y, 5, 1, 2, 0},
+	{TMC2130_TOFF_Z, 5, 1, 2, 0},
+	{TMC2130_TOFF_E, 5, 1, 2, 0}
+};
 
 bool tmc2130_sg_stop_on_crash = true;
 uint8_t tmc2130_sg_diag_mask = 0x00;

@@ -10,7 +10,7 @@
 #endif
 
 #define TMC2130
-#define UVLO_SUPPORT
+//#define UVLO_SUPPORT
 
 #define AMBIENT_THERMISTOR
 #define PINDA_THERMISTOR
