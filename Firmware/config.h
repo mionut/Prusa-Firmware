@@ -2,9 +2,21 @@
 #define _CONFIG_H
 
 
+#include "Configuration_prusa.h"
+#include "pins.h"
+
+#define IR_SENSOR_ANALOG (defined(VOLT_IR_PIN) && defined(IR_SENSOR))
+
 //ADC configuration
+#if !IR_SENSOR_ANALOG
 #define ADC_CHAN_MSK      0b0000001001011111 //used AD channels bit mask (0,1,2,3,4,6,9)
+#define ADC_DIDR_MSK      0b0000001001011111 //AD channels DIDR mask (1 ~ disabled digital input)
 #define ADC_CHAN_CNT      7         //number of used channels)
+#else //!IR_SENSOR_ANALOG
+#define ADC_CHAN_MSK      0b0000001101011111 //used AD channels bit mask (0,1,2,3,4,6,8,9)
+#define ADC_DIDR_MSK      0b0000001001011111 //AD channels DIDR mask (1 ~ disabled digital input)
+#define ADC_CHAN_CNT      8         //number of used channels)
+#endif //!IR_SENSOR_ANALOG
 #define ADC_OVRSAMPL      16        //oversampling multiplier
 #define ADC_CALLBACK      adc_ready //callback function ()
 
@@ -41,9 +53,6 @@
 #define W25X20CL_SPI_RATE      0 // fosc/4 = 4MHz
 #define W25X20CL_SPCR          SPI_SPCR(W25X20CL_SPI_RATE, 1, 1, 1, 0)
 #define W25X20CL_SPSR          SPI_SPSR(W25X20CL_SPI_RATE)
-
-#include "boards.h"
-#include "Configuration_prusa.h"
 
 //LANG - Multi-language support
 #define LANG_MODE              1 // primary language only
