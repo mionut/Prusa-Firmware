@@ -26,6 +26,7 @@
 #define STEEL_SHEET
 #define HAS_SECOND_SERIAL_PORT
 
+#define EXTRUDE_BEFORE_UNLOAD //uncomment to always extrude filament a short distance before unloading. Forms smaller tip.
 // PSU
 //#define PSU_Delta                                 // uncomment if DeltaElectronics PSU installed
 

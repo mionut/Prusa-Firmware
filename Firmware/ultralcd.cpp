@@ -6443,6 +6443,12 @@ void unload_filament()
 
 	//		extr_unload2();
 
+#ifdef EXTRUDE_BEFORE_UNLOAD
+    current_position[E_AXIS] += 3; //Kuo first extrude small amount to reduce tip size
+    plan_buffer_line_curposXYZE(60 / 60, active_extruder);
+    st_synchronize();
+#endif
+
 	current_position[E_AXIS] -= 45;
 	plan_buffer_line_curposXYZE(5200 / 60, active_extruder);
 	st_synchronize();
