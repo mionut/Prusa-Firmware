@@ -7092,12 +7092,12 @@ static void lcd_colorprint_change() {
 #ifdef LA_LIVE_K
 // @wavexx: looks like there's no generic float editing function in menu.cpp so we
 //          redefine our custom handling functions to mimick other tunables
-#define MSG_ADVANCE_K PSTR("Advance K:")
+const char menu_fmt_float13off[] PROGMEM = "%c%-13.13S%6.6S";
 
 static void lcd_advance_draw_K(char chr, float val)
 {
     if (val <= 0)
-        lcd_printf_P(menu_fmt_float13off, chr, MSG_ADVANCE_K, " [off]");
+        lcd_printf_P(menu_fmt_float13off, chr, MSG_ADVANCE_K, _T(MSG_OFF));
     else
         lcd_printf_P(menu_fmt_float13, chr, MSG_ADVANCE_K, val);
 }

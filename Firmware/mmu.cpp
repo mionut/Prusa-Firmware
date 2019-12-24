@@ -630,7 +630,7 @@ bool mmu_get_response(uint8_t move)
 				{ 
 					printf_P(PSTR("Unloading finished 2\n"));
 					disable_e0(); //turn off E-stepper to prevent overheating and alow filament pull-out if necessary
-					delay_keep_alive(MMU_LOAD_TIME_MS);
+					delay_keep_alive(MMU_UNLOAD_TIME_MS);
 					move = MMU_LOAD_MOVE;
 					get_response_print_info(move);
 				}
