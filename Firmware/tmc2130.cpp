@@ -40,7 +40,8 @@ uint8_t tmc2130_mres[4] = {0, 0, 0, 0}; //will be filed at begin of init
 
 
 uint8_t tmc2130_sg_thr[4] = {TMC2130_SG_THRS_X, TMC2130_SG_THRS_Y, TMC2130_SG_THRS_Z, TMC2130_SG_THRS_E};
-uint8_t tmc2130_sg_thr_home[4] = TMC2130_SG_THRS_HOME;
+uint8_t tmc2130_sg_thr_home[4] = { TMC2130_SG_THRS_X_HOME, TMC2130_SG_THRS_Y_HOME, TMC2130_SG_THRS_Z, TMC2130_SG_THRS_E }; //Kuo apply constants from Configuration_prusa.h
+
 
 
 uint8_t tmc2130_sg_homing_axes_mask = 0x00;
@@ -58,11 +59,12 @@ uint8_t tmc2130_wave_fac[4] = {0, 0, 0, 0};
 
 //Kuo chopper config
 tmc2130_chopper_config_t tmc2130_chopper_config[4] = {
-	{TMC2130_TOFF_X, 5, 1, 2, 0},
-	{TMC2130_TOFF_Y, 5, 1, 2, 0},
-	{TMC2130_TOFF_Z, 5, 1, 2, 0},
-	{TMC2130_TOFF_E, 5, 1, 2, 0}
-};
+      {TMC2130_TOFF_X, TMC2130_HSTR_X, TMC2130_HEND_X, TMC2130_TBL_X, TMC2130_RES_X},
+      {TMC2130_TOFF_Y, TMC2130_HSTR_Y, TMC2130_HEND_Y, TMC2130_TBL_Y, TMC2130_RES_Y},
+      {TMC2130_TOFF_Z, TMC2130_HSTR_Z, TMC2130_HEND_Z, TMC2130_TBL_Z, TMC2130_RES_Z},
+      {TMC2130_TOFF_E, TMC2130_HSTR_E, TMC2130_HEND_E, TMC2130_TBL_E, TMC2130_RES_E}
+}; //Kuo ===
+
 
 bool tmc2130_sg_stop_on_crash = true;
 uint8_t tmc2130_sg_diag_mask = 0x00;

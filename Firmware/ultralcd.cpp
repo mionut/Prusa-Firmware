@@ -2492,6 +2492,12 @@ static void mFilamentItem_PLA()
     mFilamentItem(PLA_PREHEAT_HOTEND_TEMP, PLA_PREHEAT_HPB_TEMP);
 }
 
+static void mFilamentItem_PC() //kuo add polycarbonate preheat
+{
+    bFilamentPreheatState = false;
+    mFilamentItem(PC_PREHEAT_HOTEND_TEMP, PC_PREHEAT_HPB_TEMP);
+} //---kuo
+
 static void mFilamentItem_PET()
 {
     bFilamentPreheatState = false;
@@ -2562,6 +2568,7 @@ void lcd_generic_preheat_menu()
     {
         MENU_ITEM_SUBMENU_P(PSTR("PLA  -  " STRINGIFY(PLA_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(PLA_PREHEAT_HPB_TEMP)),mFilamentItem_PLA);
         MENU_ITEM_SUBMENU_P(PSTR("PET  -  " STRINGIFY(PET_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(PET_PREHEAT_HPB_TEMP)),mFilamentItem_PET);
+        MENU_ITEM_SUBMENU_P(PSTR("PC   -  " STRINGIFY(PC_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(PC_PREHEAT_HPB_TEMP)),mFilamentItem_PC); //kuo add polycarbonate preheat
         MENU_ITEM_SUBMENU_P(PSTR("ASA  -  " STRINGIFY(ASA_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(ASA_PREHEAT_HPB_TEMP)),mFilamentItem_ASA);
         MENU_ITEM_SUBMENU_P(PSTR("ABS  -  " STRINGIFY(ABS_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(ABS_PREHEAT_HPB_TEMP)),mFilamentItem_ABS);
         MENU_ITEM_SUBMENU_P(PSTR("HIPS -  " STRINGIFY(HIPS_PREHEAT_HOTEND_TEMP) "/" STRINGIFY(HIPS_PREHEAT_HPB_TEMP)),mFilamentItem_HIPS);
@@ -6383,21 +6390,34 @@ void unload_filament()
 
 	//		extr_unload2();
 
+    //current_position[E_AXIS] -= 45;
+    //plan_buffer_line_curposXYZE(5200 / 60, active_extruder);
+    //st_synchronize();
+    //current_position[E_AXIS] -= 15;
+    //plan_buffer_line_curposXYZE(1000 / 60, active_extruder);
+    //st_synchronize();
+    //current_position[E_AXIS] -= 20;
+    //plan_buffer_line_curposXYZE(1000 / 60, active_extruder);
+    //st_synchronize();
+
+    //Kuo unload filament using settings from variant.
+
 #ifdef EXTRUDE_BEFORE_UNLOAD
-    current_position[E_AXIS] += 3; //Kuo first extrude small amount to reduce tip size
-    plan_buffer_line_curposXYZE(60 / 60, active_extruder);
+    current_position[E_AXIS] += UNLOAD_FILAMENT_DIST_0; //Kuo first extrude small amount to reduce tip size
+    plan_buffer_line_curposXYZE(UNLOAD_FILAMENT_RATE_0 / 60, active_extruder);
     st_synchronize();
 #endif
 
-	current_position[E_AXIS] -= 45;
-	plan_buffer_line_curposXYZE(5200 / 60, active_extruder);
+    current_position[E_AXIS] += UNLOAD_FILAMENT_DIST_1;
+    plan_buffer_line_curposXYZE(UNLOAD_FILAMENT_RATE_1 / 60, active_extruder);
 	st_synchronize();
-	current_position[E_AXIS] -= 15;
-	plan_buffer_line_curposXYZE(1000 / 60, active_extruder);
+    current_position[E_AXIS] += UNLOAD_FILAMENT_DIST_2;
+    plan_buffer_line_curposXYZE(UNLOAD_FILAMENT_RATE_2 / 60, active_extruder);
 	st_synchronize();
-	current_position[E_AXIS] -= 20;
-	plan_buffer_line_curposXYZE(1000 / 60, active_extruder);
+    current_position[E_AXIS] += UNLOAD_FILAMENT_DIST_3;
+    plan_buffer_line_curposXYZE(UNLOAD_FILAMENT_RATE_3 / 60, active_extruder);
 	st_synchronize();
+    //=== Kuo
 
 	lcd_display_message_fullscreen_P(_T(MSG_PULL_OUT_FILAMENT));
 
@@ -7948,7 +7968,7 @@ static bool lcd_selfcheck_axis_sg(unsigned char axis) {
 
 		printf_P(_N("Axis length difference:%.3f\n"), abs(measured_axis_length[0] - measured_axis_length[1]));
 	
-		if (abs(measured_axis_length[0] - measured_axis_length[1]) > 1) { //check if difference between first and second measurement is low
+		if (abs(measured_axis_length[0] - measured_axis_length[1]) > 5) { //Kuo loosen check if difference between first and second measurement is low
 			//loose pulleys
 			const char *_error_1;
 

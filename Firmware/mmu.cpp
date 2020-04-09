@@ -809,7 +809,15 @@ void mmu_load_to_nozzle()
     float feedrate = 562;
 	plan_buffer_line_curposXYZE(feedrate / 60, active_extruder);
     st_synchronize();
-	current_position[E_AXIS] += 14.4f;
+	#ifdef SLICEMAGNUM //Kuo adjust 2nd stage move so we stop above melt zone at next fast move
+		current_position[E_AXIS] += 9.4f; //5 mm less because melt zone is further up
+	#elif defined(SKELESTRUDER)
+		current_position[E_AXIS] += 9.4f; //5 mm less because Skelestruder is shorter than MK3S
+	#elif defined(BONDTECH_PRUSA_UPGRADE_MK3S)
+		current_position[E_AXIS] += 25.4f; //11 mm further Bondtech is taller than MK3S
+	#else
+		current_position[E_AXIS] += 14.4f; //default MK3S initial down PTFE
+	#endif
 	feedrate = 871;
 	plan_buffer_line_curposXYZE(feedrate / 60, active_extruder);
     st_synchronize();
@@ -817,7 +825,11 @@ void mmu_load_to_nozzle()
 	feedrate = 1393;
 	plan_buffer_line_curposXYZE(feedrate / 60, active_extruder);
     st_synchronize();
-	current_position[E_AXIS] += 14.4f;
+	#ifdef SLICEMAGNUM //Kuo adjust for distance into and through melt zone to start of nozzle
+		current_position[E_AXIS] += 19.4f; //5mm further through Slice Magnum melt zone
+	#else
+		current_position[E_AXIS] += 14.4f; //default through to nozzle start
+	#endif //--Kuo
 	feedrate = 871;
 	plan_buffer_line_curposXYZE(feedrate / 60, active_extruder);
     st_synchronize();
@@ -1445,12 +1457,30 @@ bFilamentAction=false;                            // NOT in "mmu_fil_eject_menu(
 //! @retval false Doesn't fit
 static bool can_load()
 {
-    current_position[E_AXIS] += 60;
+    #ifdef SLICEMAGNUM //Kuo decreased load distances so we stop above melt zone
+      current_position[E_AXIS] += 56; //Mosquito Magnum melt is 4 mm sooner than MK3S
+    #elif defined(SKELESTRUDER)
+      current_position[E_AXIS] += 55; //Skelestruder is 5 mm shorter than MK3S
+    #elif defined(BONDTECH_PRUSA_UPGRADE_MK3S)
+      current_position[E_AXIS] += 71; //Bondtech is 11 mm longer than MK3S
+    #else
+      current_position[E_AXIS] += 60; //jam into melt zone which is tightest path point in E3D
+    #endif //Kuo ===
     plan_buffer_line_curposXYZE(MMU_LOAD_FEEDRATE, active_extruder);
-    current_position[E_AXIS] -= 52;
+ 
+    //Kuo. Pull back to place tip 8 mm below Bondtech for final pull back test 
+    #ifdef SLICEMAGNUM 
+      current_position[E_AXIS] -= 48;
+    #elif defined(SKELESTRUDER)
+      current_position[E_AXIS] -= 47;
+    #elif defined(BONDTECH_PRUSA_UPGRADE_MK3S)
+      current_position[E_AXIS] -= 63;
+    #else
+      current_position[E_AXIS] -= 52;
+    #endif //Kuo ===	
     plan_buffer_line_curposXYZE(MMU_LOAD_FEEDRATE, active_extruder);
     st_synchronize();
-
+	
     uint_least8_t filament_detected_count = 0;
     const float e_increment = 0.2;
     const uint_least8_t steps = 6.0 / e_increment;

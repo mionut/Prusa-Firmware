@@ -30,8 +30,8 @@ extern uint16_t mmu_power_failures;
 #define MMU_TCODE_MOVE 3
 
 #define MMU_LOAD_FEEDRATE 19.02f //mm/s
-#define MMU_LOAD_TIME_MS 2000 //should be fine tuned to load time for shortest allowed PTFE tubing and maximum loading speed
-#define MMU_UNLOAD_TIME_MS 3000
+#define MMU_LOAD_TIME_MS 2200 //should be fine tuned to load time for shortest allowed PTFE tubing and maximum loading speed
+#define MMU_UNLOAD_TIME_MS 3300
 
 enum class MmuCmd : uint_least8_t
 {

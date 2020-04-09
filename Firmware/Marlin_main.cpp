@@ -1302,8 +1302,8 @@ void setup()
 	tmc2130_mres[Z_AXIS] = tmc2130_usteps2mres(cs.axis_ustep_resolution[Z_AXIS]);
 	tmc2130_mres[E_AXIS] = tmc2130_usteps2mres(cs.axis_ustep_resolution[E_AXIS]);
 #else //TMC2130_VARIABLE_RESOLUTION
-	tmc2130_mres[X_AXIS] = tmc2130_usteps2mres(TMC2130_USTEPS_XY);
-	tmc2130_mres[Y_AXIS] = tmc2130_usteps2mres(TMC2130_USTEPS_XY);
+	tmc2130_mres[X_AXIS] = tmc2130_usteps2mres(TMC2130_USTEPS_X); //Kuo
+	tmc2130_mres[Y_AXIS] = tmc2130_usteps2mres(TMC2130_USTEPS_Y); //Kuo
 	tmc2130_mres[Z_AXIS] = tmc2130_usteps2mres(TMC2130_USTEPS_Z);
 	tmc2130_mres[E_AXIS] = tmc2130_usteps2mres(TMC2130_USTEPS_E);
 #endif //TMC2130_VARIABLE_RESOLUTION
@@ -2286,10 +2286,9 @@ void homeaxis(int axis, uint8_t cnt)
 #ifdef TMC2130
 		uint8_t orig = tmc2130_home_origin[axis];
 		uint8_t back = tmc2130_home_bsteps[axis];
-		uint16_t res = tmc2130_get_res(axis);
-		if (tmc2130_home_enabled && (orig < 4 * res))
+		if (tmc2130_home_enabled && (orig <= kHOMING_CNT_MIN)) //Kuo adjustabe for 0.9 motors
 		{
-			tmc2130_goto_step(axis, orig, 2, 1000, res);
+			tmc2130_goto_step(axis, orig, 2, 1000, tmc2130_get_res(axis));
 			if (back > 0)
 				tmc2130_do_steps(axis, back, -axis_home_dir, 1000);
 		}
@@ -3227,13 +3226,16 @@ void gcode_M701()
 #endif //FSENSOR_QUALITY
 
 		lcd_setstatuspgm(_T(MSG_LOADING_FILAMENT));
-		current_position[E_AXIS] += 40;
-		plan_buffer_line_curposXYZE(400 / 60, active_extruder); //fast sequence
+
+        //Kuo load filament using variants settings
+        current_position[E_AXIS] += LOAD_FILAMENT_DIST_1;
+        plan_buffer_line_curposXYZE(LOAD_FILAMENT_RATE_1 / 60, active_extruder); //fast sequence
 		st_synchronize();
 
         raise_z_above(MIN_Z_FOR_LOAD, false);
-		current_position[E_AXIS] += 30;
-		plan_buffer_line_curposXYZE(400 / 60, active_extruder); //fast sequence
+        current_position[E_AXIS] += LOAD_FILAMENT_DIST_2;
+        plan_buffer_line_curposXYZE(LOAD_FILAMENT_RATE_2 / 60, active_extruder); //fast sequence
+        //=== Kuo
 		
 		load_filament_final_feed(); //slow sequence
 		st_synchronize();
@@ -8421,7 +8423,168 @@ Sigma_Exit:
     }
     break;
 
+		    //Kuo mCodes
+case 919: //! M919 - Set TMC2130 toff Kuo
+     {
+     uint8_t a = 0;
+     uint8_t theValue;
+    
+     if (code_seen('X')) 
+     {
+      a = 0;
+      theValue = code_value();
+     }
+      if (code_seen('Y')) 
+     {
+      a = 1;
+      theValue = code_value();
+     }
+      if (code_seen('Z')) 
+     {
+      a = 2;
+      theValue = code_value();
+     }
+      if (code_seen('E')) 
+     {
+      a = 3;
+      theValue = code_value();
+     }
+     
+     tmc2130_chopper_config[a].toff = theValue;
+     printf_P(_N("tmc2130_toff[%c]=%d\n"), "XYZE"[a], tmc2130_chopper_config[a].toff);  
+
+     tmc2130_setup_chopper(a, tmc2130_mres[a], tmc2130_current_h[a], tmc2130_current_r[a]);
+ 
+    }
+    break;
+
+ case 920: //! M920 - Set TMC2130 hstr Kuo
+ {
+     uint8_t a = 0;
+     uint8_t theValue;
+    
+     if (code_seen('X')) 
+     {
+      a = 0;
+      theValue = code_value();
+     }
+      if (code_seen('Y')) 
+     {
+      a = 1;
+      theValue = code_value();
+     }
+      if (code_seen('Z')) 
+     {
+      a = 2;
+      theValue = code_value();
+     }
+      if (code_seen('E')) 
+     {
+      a = 3;
+      theValue = code_value();
+     }
+
+     tmc2130_chopper_config[a].hstr = theValue;
+     printf_P(_N("tmc2130_hstr[%c]=%d\n"), "XYZE"[a], tmc2130_chopper_config[a].hstr);  
+ 
+     tmc2130_setup_chopper(a, tmc2130_mres[a], tmc2130_current_h[a], tmc2130_current_r[a]);
+ 
+    }
+    break;
+
+ case 921: //! M921 - Set TMC2130 hend Kuo
+    {
+     uint8_t a = 0;
+     uint8_t theValue;
+    
+     if (code_seen('X')) 
+     {
+      a = 0;
+      theValue = code_value();
+     }
+      if (code_seen('Y')) 
+     {
+      a = 1;
+      theValue = code_value();
+     }
+      if (code_seen('Z')) 
+     {
+      a = 2;
+      theValue = code_value();
+     }
+      if (code_seen('E')) 
+     {
+      a = 3;
+      theValue = code_value();
+     }
+
+     tmc2130_chopper_config[a].hend = theValue;
+     printf_P(_N("tmc2130_hend[%c]=%d\n"), "XYZE"[a], tmc2130_chopper_config[a].hend);  
+
+     tmc2130_setup_chopper(a, tmc2130_mres[a], tmc2130_current_h[a], tmc2130_current_r[a]);
+    }
+    break;
+    
+ case 922: //! M922 - Set TMC2130 tbl Kuo
+    {
+     uint8_t a = 0;
+     uint8_t theValue;
+    
+     if (code_seen('X')) 
+     {
+      a = 0;
+      theValue = code_value();
+     }
+      if (code_seen('Y')) 
+     {
+      a = 1;
+      theValue = code_value();
+     }
+      if (code_seen('Z')) 
+     {
+      a = 2;
+      theValue = code_value();
+     }
+      if (code_seen('E')) 
+     {
+      a = 3;
+      theValue = code_value();
+     }
+
+     tmc2130_chopper_config[a].tbl = theValue;
+     printf_P(_N("tmc2130_tbl[%c]=%d\n"), "XYZE"[a], tmc2130_chopper_config[a].tbl);  
+    
+     tmc2130_setup_chopper(a, tmc2130_mres[a], tmc2130_current_h[a], tmc2130_current_r[a]);
+ 
+    }
+    break;
+    
+    //end Kuo m-Codes enabled by TMC2130_SERVICE_CODES_M910_M918 ===
+
 #endif //TMC2130_SERVICE_CODES_M910_M918
+//Kuo MCodes that are always available
+  case 924: //! M924 - Set sg_thrs_home Kuo
+    {
+    if (code_seen('X')) tmc2130_sg_thr_home[X_AXIS] = code_value();
+    if (code_seen('Y')) tmc2130_sg_thr_home[Y_AXIS] = code_value();
+    if (code_seen('Z')) tmc2130_sg_thr_home[Z_AXIS] = code_value();
+    if (code_seen('E')) tmc2130_sg_thr_home[E_AXIS] = code_value();
+    for (uint8_t a = X_AXIS; a <= E_AXIS; a++)
+      printf_P(_N("tmc2130_sg_thr_home[%c]=%d\n"), "XYZE"[a], tmc2130_sg_thr_home[a]);
+    }
+    break;
+
+
+  case 925: //! M925 - Set homing feed rate Kuo
+    {
+    if (code_seen('X')) homing_feedrate[X_AXIS] = code_value();
+    if (code_seen('Y')) homing_feedrate[Y_AXIS] = code_value();
+    if (code_seen('Z')) homing_feedrate[Z_AXIS] = code_value();
+    for (uint8_t a = X_AXIS; a <= Z_AXIS; a++)
+      printf_P(_N("homing_feedrate[%c]=%f\n"), "XYZE"[a], homing_feedrate[a]);
+    }
+    break;
+//Kuo end MCodes that are always available ===
 
     /*!
 	### M350 - Set microstepping mode <a href="https://reprap.org/wiki/G-code#M350:_Set_microstepping_mode">M350: Set microstepping mode</a>
