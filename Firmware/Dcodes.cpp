@@ -538,6 +538,7 @@ const char* dcode_9_ADC_name(uint8_t i)
 	case 4: return PSTR("VOLT_PWR");
 	case 5: return PSTR("TEMP_AMBIENT");
 	case 6: return PSTR("VOLT_BED");
+    default: return PSTR("");
 	}
 	return 0;
 }

@@ -12,7 +12,7 @@ extern void dcode_3(); //D3 - Read/Write EEPROM
 
 extern void dcode_4(); //D4 - Read/Write PIN
 
-#ifdef DEBUG_DCODE5
+#if defined DEBUG_DCODE5 || defined DEBUG_DCODES
 extern void dcode_5(); //D5 - Read/Write FLASH
 #endif //DEBUG_DCODE5
 
