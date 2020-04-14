@@ -163,7 +163,7 @@
 // Travel limits after homing
 #define X_MAX_POS 255
 #define X_MIN_POS 0
-#define Y_MAX_POS 212.5
+#define Y_MAX_POS 210.5
 #define Y_MIN_POS -4 //orig -4
 #ifdef SKELESTRUDER //kuo Skelestruder height
   #define Z_MAX_POS 220
@@ -315,7 +315,7 @@
 #endif /* DEBUG_BUILD */
 
 //#define FSENSOR_QUALITY
-
+#define DEBUG_DCODES //D codes
 
 #define LINEARITY_CORRECTION
 #define TMC2130_LINEARITY_CORRECTION
@@ -498,16 +498,16 @@
   #define TMC2130_SG_THRS_X       3    // std stallguard sensitivity for X axis
   #define TMC2130_SG_THRS_X_HOME  3    // std homing stallguard threshold for X axis
 #else
-  #define TMC2130_SG_THRS_X       4    // Kuo change here if different needed for 0.9 degree motors
-  #define TMC2130_SG_THRS_X_HOME  4
+  #define TMC2130_SG_THRS_X       3    // Kuo change here if different needed for 0.9 degree motors
+  #define TMC2130_SG_THRS_X_HOME  2
 #endif
 
 #ifndef Y_AXIS_MOTOR_09 //Kuo
   #define TMC2130_SG_THRS_Y       3    // std stallguard sensitivity for Y axis
   #define TMC2130_SG_THRS_Y_HOME  3    // std homing stallguard threshold for Y axis
 #else
-  #define TMC2130_SG_THRS_Y       4    // Kuo change here if different needed for 0.9 degree motors
-  #define TMC2130_SG_THRS_Y_HOME  4
+  #define TMC2130_SG_THRS_Y       3    // Kuo change here if different needed for 0.9 degree motors
+  #define TMC2130_SG_THRS_Y_HOME  2
 #endif
 
 #ifndef Z_AXIS_MOTOR_09 //Kuo
@@ -530,7 +530,7 @@
 
 #define TMC2130_STEALTH_Z
 
-//#define TMC2130_SERVICE_CODES_M910_M918 //Kuo Uncomment this line to enable TMC2130 service codes
+#define TMC2130_SERVICE_CODES_M910_M918 //Kuo Uncomment this line to enable TMC2130 service codes
 
 //#define TMC2130_DEBUG
 //#define TMC2130_DEBUG_WR
@@ -939,7 +939,7 @@
 
 #define M600_TIMEOUT 600  //seconds
 
-//#define SUPPORT_VERBOSITY
+#define SUPPORT_VERBOSITY
 
 #define MMU_REQUIRED_FW_BUILDNR 83
 #define MMU_HWRESET
